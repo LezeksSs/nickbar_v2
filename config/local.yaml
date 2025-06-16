@@ -1,0 +1,7 @@
+app:
+  http_port: 8081
+  log_level: "debug"
+
+db:
+  host: "localhost"
+  sslmode: "disable"
