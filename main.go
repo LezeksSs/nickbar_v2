@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
 	"nickbar_v2/internal/config"
+	"nickbar_v2/internal/storage/pgsql"
 	"os"
 )
 
@@ -14,6 +16,9 @@ const (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("error in config: %s", err)
@@ -29,6 +34,7 @@ func main() {
 	log.Debug("debug messages are enabled")
 
 	// TODO: init storage - PostgreSQL
+	_, err = pgsql.NewPgxPool(ctx)
 
 	// TODO: init router - gorilla/mux
 
