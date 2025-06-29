@@ -40,6 +40,8 @@ func main() {
 
 	// TODO: run server
 
+	// TODO: implement event/notify feature   client -> server -> kitchen api -> waitress api (notification)
+
 }
 
 func setupLogger(env string) *slog.Logger {
