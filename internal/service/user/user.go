@@ -30,7 +30,7 @@ func NewUserService(userRepository UserRepository) *UserService {
 	return &UserService{userRepository: userRepository}
 }
 
-func (s *UserService) RegisterNewUser(nickname requests.LoginRequest) (repository.TokenPayload, error) {
+func (s *UserService) RegisterUser(nickname requests.LoginRequest) (repository.TokenPayload, error) {
 	_, err := s.userRepository.CreateUser(nickname.Nickname)
 
 	if err != nil {
