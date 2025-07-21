@@ -12,6 +12,7 @@ type TagService struct {
 	tagRepository TagRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=TagRepository --output=../../internal/mocks --with-expecter
 type TagRepository interface {
 	CreateTag(ctx context.Context, tag models.Tag) (models.Tag, error)
 	IsTagExistAndApproved(ctx context.Context, name string) (bool, models.Tag, error)
@@ -28,16 +29,8 @@ type TagRepository interface {
 	DeleteCocktailTag(ctx context.Context, cocktailId, tagId, userId string, userRole int) error
 }
 
-func NewTagRepository(tagRepository TagRepository) *TagService {
+func NewTagService(tagRepository TagRepository) *TagService {
 	return &TagService{tagRepository: tagRepository}
-}
-
-func mapTag(userId string, req requests.TagRequest) models.Tag {
-	tag := models.Tag{
-		Name:   req.Name,
-		UserId: userId,
-	}
-	return tag
 }
 
 func (ts *TagService) CreateTag(ctx context.Context, tagRequest requests.TagRequest) (models.Tag, error) {

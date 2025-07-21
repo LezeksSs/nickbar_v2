@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"nickbar_v2/internal/models/models"
-	"nickbar_v2/internal/repository"
 )
 
 const admin_role int = 1
@@ -42,11 +41,11 @@ func init() {
 }
 
 type AuthService struct {
-	authRepository repository.AuthRepository
-	userRepository repository.UserRepository
+	authRepository AuthRepository
+	userRepository UserRepository
 }
 
-func NewAuthService(authRepo repository.AuthRepository, userRepo repository.UserRepository) *AuthService {
+func NewAuthService(authRepo AuthRepository, userRepo UserRepository) *AuthService {
 	return &AuthService{authRepository: authRepo, userRepository: userRepo}
 }
 

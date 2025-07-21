@@ -18,6 +18,10 @@ type authService interface {
 	CheckAccess(route string, method string, user models.User) bool
 }
 
+func NewAuthMiddleware(log *slog.Logger, authService authService) *AuthMiddleware {
+	return &AuthMiddleware{log: log, authService: authService}
+}
+
 func (AuthMiddleware *AuthMiddleware) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		AuthMiddleware.ProccessAuthorization(w, req, next)

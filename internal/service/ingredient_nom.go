@@ -12,12 +12,13 @@ type IngredientNomService struct {
 	ingredientNomRepository IngredientNomRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=IngredientNomRepository --output=../../internal/mocks --with-expecter
 type IngredientNomRepository interface {
 	CreateIngredientNom(ctx context.Context, nomenclature models.IngredientNomenclature) (models.IngredientNomenclature, error)
 	// GetIngredientNom(ctx context.Context, name string) (models.IngredientNomenclature, error)
 	GetIngredientNoms(ctx context.Context) ([]models.IngredientNomenclature, error)
 	GetUnapprovedIngredientNom(ctx context.Context) ([]models.IngredientNomenclature, error)
-	// GetApprovedIngredientNom(ctx context.Context) ([]models.IngredientNomenclature, error)
+	GetApprovedIngredientNom(ctx context.Context) ([]models.IngredientNomenclature, error)
 	GetPersonalIngredientNom(ctx context.Context, userId string) ([]models.IngredientNomenclature, error)
 	// UpdateIngredientNom(ctx context.Context, nomenclature models.IngredientNomenclature) error
 	UpdateIngredientNomsApprovedStatus(ctx context.Context, nomenclatures []models.IngredientNomenclature) error
@@ -72,7 +73,7 @@ func (is *IngredientNomService) GetUnapprovedIngredientNom(ctx context.Context) 
 }
 
 func (is *IngredientNomService) GetApprovedIngredientNom(ctx context.Context) ([]models.IngredientNomenclature, error) {
-	nomenclatures, err := is.ingredientNomRepository.GetUnapprovedIngredientNom(ctx)
+	nomenclatures, err := is.ingredientNomRepository.GetApprovedIngredientNom(ctx)
 	if err != nil {
 		return []models.IngredientNomenclature{}, fmt.Errorf("getapprovednomenclatures in IngredientNomService error %s", err.Error())
 	}

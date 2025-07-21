@@ -11,6 +11,7 @@ type UserService struct {
 	authRepository AuthRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=UserRepository --output=../../internal/mocks --with-expecter
 type UserRepository interface {
 	GetUser(nickname string) (models.User, error)
 	CreateUser(nickname string) (models.User, error)
@@ -20,14 +21,15 @@ type UserRepository interface {
 	GetUserList() ([]models.User, error)
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=AuthRepository --output=../../internal/mocks --with-expecter
 type AuthRepository interface {
 	ProduceToken(nickname string) (repository.TokenPayload, error)
 	ValidateToken(accToken string) (bool, string, error)
 	RefreshTokens(refrToken string) error
 }
 
-func NewUserService(userRepository UserRepository) *UserService {
-	return &UserService{userRepository: userRepository}
+func NewUserService(userRepository UserRepository, authRepository AuthRepository) *UserService {
+	return &UserService{userRepository: userRepository, authRepository: authRepository}
 }
 
 func (s *UserService) RegisterUser(nickname requests.LoginRequest) (repository.TokenPayload, error) {

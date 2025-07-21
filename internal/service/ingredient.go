@@ -13,6 +13,7 @@ type IngredientService struct {
 	ingredientNomRepository IngrtNomRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=IngredientRepository --output=../../internal/mocks --with-expecter
 type IngredientRepository interface {
 	CreateIngredient(ctx context.Context, cocktailID string, ingredient models.Ingredient) (models.Ingredient, error)
 	DeleteIngredient(ctx context.Context, ingredientID, cocktailID, userID string) error
@@ -20,6 +21,7 @@ type IngredientRepository interface {
 	InsertIngredient(ctx context.Context, ingredient models.Ingredient, cocktailID string) error
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=IngrtNomRepository --output=../../internal/mocks --with-expecter
 type IngrtNomRepository interface {
 	CreateIngredientNom(ctx context.Context, nomenclature models.IngredientNomenclature) (models.IngredientNomenclature, error)
 	// GetIngredientNom(ctx context.Context, name string) (models.IngredientNomenclature, error)
@@ -35,28 +37,6 @@ type IngrtNomRepository interface {
 
 func NewIngredientService(ingredientRepository IngredientRepository, ingredientNomRepository IngrtNomRepository) *IngredientService {
 	return &IngredientService{ingredientRepository: ingredientRepository, ingredientNomRepository: ingredientNomRepository}
-}
-
-func mapIngredient(userId string, req requests.IngredientRequest) models.Ingredient {
-	var replacements []models.Ingredient
-	for _, replReq := range req.Replacement {
-		repl := mapIngredient(userId, replReq)
-		replacements = append(replacements, repl)
-	}
-
-	nomenclature := models.IngredientNomenclature{Name: req.Name, Picture: "", UserId: userId}
-
-	ingredient := models.Ingredient{
-		Name:        nomenclature,
-		Amount:      req.Amount,
-		Measure:     req.Measure,
-		Replacement: replacements,
-		Optional:    req.Optional,
-		Decorative:  req.Decorative,
-		Position:    req.Position,
-	}
-
-	return ingredient
 }
 
 func (is *IngredientService) CreateIngredient(ctx context.Context, cocktailId string, request requests.IngredientRequest) (models.Ingredient, error) {

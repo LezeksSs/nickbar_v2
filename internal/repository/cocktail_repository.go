@@ -115,6 +115,42 @@ func (r *CocktailRepository) GetCocktailsByName(ctx context.Context, name string
 	return cocktails, nil
 }
 
+func (r *CocktailRepository) GetCocktails(ctx context.Context, isApproved bool, usedId string) ([]models.Cocktail, error) {
+	const ep = "repository.cocktail.GetCocktails"
+
+	query := `SELECT id, name, picture, rating, description, recipe, user_id, approved, creation_date, update_date
+			  FROM cocktails WHERE (approved=true AND $1) OR (approved=false AND NOT $1 AND user_id=$2)`
+	rows, err := r.db.Query(ctx, query, isApproved, usedId)
+	if err != nil {
+		return nil, fmt.Errorf("SELECT ERROR in %s: %w", ep, err)
+	}
+	defer rows.Close()
+
+	var cocktails []models.Cocktail
+	for rows.Next() {
+		var c models.Cocktail
+		err := rows.Scan(&c.Id, &c.Name, &c.Picture, &c.Rating, &c.Description, &c.Recipe, &c.UserId, &c.Approved, &c.CreationDate, &c.UpdateDate)
+		if err != nil {
+			return nil, fmt.Errorf("SCAN ROW ERROR in %s: %w", ep, err)
+		}
+
+		// Fetch ingredients and tags
+		c.Ingredients, err = r.GetIngredientsByCocktailID(ctx, c.Id)
+		if err != nil {
+			return nil, fmt.Errorf("FETCH INGR ERROR in %s: %w", ep, err)
+		}
+
+		c.Tags, err = r.GetTagsByCocktailID(ctx, c.Id)
+		if err != nil {
+			return nil, fmt.Errorf("FETCH TAG ERROR in %s: %w", ep, err)
+		}
+
+		cocktails = append(cocktails, c)
+	}
+
+	return cocktails, nil
+}
+
 func (r *CocktailRepository) GetCocktailByID(ctx context.Context, id string) (models.Cocktail, error) {
 	const ep = "repository.cocktail.GetCocktailByID"
 

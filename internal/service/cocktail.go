@@ -11,15 +11,17 @@ import (
 
 type CocktailService struct {
 	cocktailRepository      CocktailRepository
-	ingredientRepository    IngredientRepository
-	tagRepository           TagRepository
-	ingredientNomRepository IngredientNomRepository
+	ingredientRepository    CsIngredientRepository
+	tagRepository           CsTagRepository
+	ingredientNomRepository CsIngredientNomRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@latest --name=CocktailRepository --output=../../internal/mocks --with-expecter
 type CocktailRepository interface {
 	CreateCocktail(ctx context.Context, cocktail models.Cocktail) (models.Cocktail, error)
 	IsCocktailExistAndApproved(ctx context.Context, name string) (bool, error)
 	GetCocktailByID(ctx context.Context, id string) (models.Cocktail, error)
+	GetCocktails(ctx context.Context, isApproved bool, usedId string) ([]models.Cocktail, error)
 	GetCocktailsByIngredients(ctx context.Context, ingredientNames []string) ([]models.Cocktail, error)
 	GetCocktailsByName(ctx context.Context, name string) ([]models.Cocktail, error)
 	GetCocktailsByTags(ctx context.Context, tagNames []string) ([]models.Cocktail, error)
@@ -27,14 +29,16 @@ type CocktailRepository interface {
 	DeleteCocktail(ctx context.Context, id string) error
 }
 
-type IngredientRepository interface {
+//go:generate go run github.com/vektra/mockery/v2@latest --name=CsIngredientRepository --output=../../internal/mocks --with-expecter
+type CsIngredientRepository interface {
 	CreateIngredient(ctx context.Context, cocktailID string, ingredient models.Ingredient) (models.Ingredient, error)
 	// DeleteIngredient(ctx context.Context, ingredientID, cocktailID, userID string) error
 	GetIngredientsByCocktailID(ctx context.Context, cocktailId string) ([]models.Ingredient, error)
 	// InsertIngredient(ctx context.Context, ingredient models.Ingredient, cocktailID string) error
 }
 
-type TagRepository interface {
+//go:generate go run github.com/vektra/mockery/v2@latest --name=CsTagRepository --output=../../internal/mocks --with-expecter
+type CsTagRepository interface {
 	CreateTag(ctx context.Context, tag models.Tag) (models.Tag, error)
 	IsTagExistAndApproved(ctx context.Context, name string) (bool, models.Tag, error)
 	// GetTag(ctx context.Context, name string) (models.Tag, error)
@@ -50,7 +54,8 @@ type TagRepository interface {
 	// DeleteCocktailTag(ctx context.Context, cocktailId, tagId, userId string, userRole int) error
 }
 
-type IngredientNomRepository interface {
+//go:generate go run github.com/vektra/mockery/v2@latest --name=CsIngredientNomRepository --output=../../internal/mocks --with-expecter
+type CsIngredientNomRepository interface {
 	CreateIngredientNom(ctx context.Context, nomenclature models.IngredientNomenclature) (models.IngredientNomenclature, error)
 	// GetIngredientNom(ctx context.Context, name string) (models.IngredientNomenclature, error)
 	// GetIngredientNoms(ctx context.Context) ([]models.IngredientNomenclature, error)
@@ -63,11 +68,11 @@ type IngredientNomRepository interface {
 	IsIngredientNomExistAndApproved(ctx context.Context, name string) (bool, models.IngredientNomenclature, error)
 }
 
-func NewCocktailService(cocktailRepository CocktailRepository, ingredientRepository IngredientRepository, tagRepository TagRepository, ingredientNomRepository IngredientNomRepository) *CocktailService {
+func NewCocktailService(cocktailRepository CocktailRepository, ingredientRepository CsIngredientRepository, tagRepository CsTagRepository, ingredientNomRepository CsIngredientNomRepository) *CocktailService {
 	return &CocktailService{cocktailRepository: cocktailRepository, ingredientRepository: ingredientRepository, tagRepository: tagRepository, ingredientNomRepository: ingredientNomRepository}
 }
 
-func mapCocktail(userId string, data requests.CocktailRequest) models.Cocktail {
+var mapCocktail = func(userId string, data requests.CocktailRequest) models.Cocktail {
 	var ingredients []models.Ingredient
 	for _, ingReq := range data.Ingredients {
 		ing := mapIngredient(userId, ingReq)
@@ -265,6 +270,34 @@ func (cs *CocktailService) UpdateCocktail(ctx context.Context, data requests.Coc
 
 func (cs *CocktailService) GetCocktailsByName(ctx context.Context, name string) ([]models.Cocktail, error) {
 	cocktails, err := cs.cocktailRepository.GetCocktailsByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range cocktails {
+		ingredients, err := cs.ingredientRepository.GetIngredientsByCocktailID(ctx, cocktails[i].Id)
+		if err != nil {
+			return nil, err
+		}
+		cocktails[i].Ingredients = ingredients
+
+		tags, err := cs.tagRepository.GetTagsByCocktailID(ctx, cocktails[i].Id)
+		if err != nil {
+			return nil, err
+		}
+		cocktails[i].Tags = tags
+	}
+
+	return cocktails, nil
+}
+
+func (cs *CocktailService) GetCocktails(ctx context.Context, isApproved bool) ([]models.Cocktail, error) {
+	user, ok := models.GetUserFromContext(ctx)
+	if !ok {
+		return []models.Cocktail{}, errors.New("unathorized")
+	}
+
+	cocktails, err := cs.cocktailRepository.GetCocktails(ctx, isApproved, user.Id)
 	if err != nil {
 		return nil, err
 	}

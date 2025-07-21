@@ -5,3 +5,6 @@ app:
 db:
   host: "localhost"
   sslmode: "disable"
+
+redis:
+  address: "localhost"

@@ -28,6 +28,16 @@ type DBConfig struct {
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 }
 
+type RedisConfig struct {
+	Address      string                         `mapstructure:"address"`
+	Password     string                         `mapstructure:"password"`
+	DB           int                            `mapstructure:"db"`
+	WriteTimeout time.Duration                  `mapstructure:"write_timeout"`
+	ReadTimeout  time.Duration                  `mapstructure:"read_timeout"`
+	TokenExpire  time.Duration                  `mapstructure:"token_ttl"`
+	Tokenizer    func() (string, string, error) `mapstructure:"tokenizer"`
+}
+
 func (d DBConfig) DSN() string {
 	// return postgres://user:pswrd@host:port/dbname?sslmode=require
 	return fmt.Sprintf(
@@ -38,8 +48,9 @@ func (d DBConfig) DSN() string {
 }
 
 type Config struct {
-	App AppConfig `mapstructure:"app"`
-	DB  DBConfig  `mapstructure:"db"`
+	App   AppConfig   `mapstructure:"app"`
+	DB    DBConfig    `mapstructure:"db"`
+	Redis RedisConfig `mapstructure:"redis"`
 }
 
 func Load() (*Config, error) {
@@ -68,6 +79,7 @@ func Load() (*Config, error) {
 
 	_ = v.BindEnv("db.user", "APP_DB_USER")
 	_ = v.BindEnv("db.password", "APP_DB_PASSWORD")
+	_ = v.BindEnv("redis.password", "APP_REDIS_PASSWORD")
 	v.AutomaticEnv() // даёт приоритет переменным среды
 
 	var cfg Config

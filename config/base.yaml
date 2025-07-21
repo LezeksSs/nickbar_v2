@@ -10,3 +10,9 @@ db:
   port: 5432
   name: nickbar
   sslmode: "disable"
+
+redis:
+  address: "127.0.0.1:6379"
+  write_timeout: 5s
+  read_timeout: 5s
+  token_ttl: 15m
