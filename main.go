@@ -93,6 +93,26 @@ func main() {
 	s.HandleFunc("/cocktails/search", cc.SearchCocktails).Methods("GET")
 	s.HandleFunc("/cocktails", cc.DeleteCocktail).Methods("DELETE")
 
+	s.HandleFunc("/ingredients", ic.AddIngredientToCocktail).Methods("POST")
+	s.HandleFunc("/ingredients", ic.DeleteIngredientFromCocktail).Methods("DELETE")
+	s.HandleFunc("/ingredients", ic.GetIngredients).Methods("GET")
+
+	s.HandleFunc("/ingredientnoms", inc.CreateIngredientNom).Methods("POST")
+	s.HandleFunc("/ingredientnoms", inc.GetIngredientNoms).Methods("GET")
+	s.HandleFunc("/ingredientnoms/personal", inc.GetPersonalIngredientNom).Methods("GET")
+	s.HandleFunc("/ingredientnoms/approved", inc.GetApprovedIngredientNom).Methods("GET")
+	s.HandleFunc("/ingredientnoms/unapproved", inc.GetUnapprovedIngredientNom).Methods("GET")
+	s.HandleFunc("/ingredientnoms", inc.UpdateIngredientNomApprovedStatus).Methods("UPDATE")
+	s.HandleFunc("/ingredientnoms", inc.DeleteIngredientNom).Methods("DELETE")
+
+	s.HandleFunc("/tags", tc.CreateTag).Methods("POST")
+	s.HandleFunc("/tags", tc.DeleteTag).Methods("DELETE")
+	s.HandleFunc("/tags", tc.GetTags).Methods("GET")
+	s.HandleFunc("/tags/approved", tc.GetApprovedTags).Methods("GET")
+	s.HandleFunc("/tags/personal", tc.GetPersonalTags).Methods("GET")
+	s.HandleFunc("/tags/unapproved", tc.GetUnapprovedTags).Methods("GET")
+	s.HandleFunc("/tags", tc.UpdateTagsApprovedStatus).Methods("UPDATE")
+
 	addr := fmt.Sprintf("%s:%d", cfg.App.Host, cfg.App.Port)
 	log.Info("Starting server", slog.Any("addr", addr))
 
