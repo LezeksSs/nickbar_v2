@@ -3,8 +3,7 @@ app:
   log_level: "debug"
 
 db:
-  host: "localhost"
   sslmode: "disable"
 
 redis:
-  address: "localhost"
+  address: "localhost:6379"

@@ -27,7 +27,7 @@ func main() {
 		getenv("POSTGRES_PASSWORD", "postgres"),
 		getenv("POSTGRES_HOST", "localhost"),
 		getenv("POSTGRES_PORT", "5432"),
-		getenv("POSTGRES_DB", "postgres"),
+		getenv("POSTGRES_DB", "nickbar"),
 	)
 
 	// ---------- инициализация migrate ----------

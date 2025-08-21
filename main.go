@@ -47,22 +47,21 @@ func main() {
 	log.Debug("debug messages are enabled")
 
 	// TODO: init storage - PostgreSQL
-	pool, err := pgsql.NewPgxPool(ctx)
-
+	pool, err := pgsql.NewPgxPool(ctx, log, cfg)
+	log.Info("db pool: %p", pool)
 	redisRepo, err := repository.NewRedisAuthRepository(repository.RedisAuthParams{
-		Addr:         cfg.Redis.Address,
+		Addr:         os.Getenv("REDIS_ADDR"),
 		WriteTimeout: cfg.Redis.WriteTimeout,
 		ReadTimeout:  cfg.Redis.ReadTimeout,
 		TokenExpire:  cfg.Redis.TokenExpire,
 		Tokenizer:    tokenizer,
 	})
-
+	log.Info("redis repo: %p", redisRepo)
 	cocktailRepo := repository.NewCocktailRepository(pool)
 	ingrRepo := repository.NewIngredientRepository(pool)
 	ingrNomRepo := repository.NewIngredientNomenclatureRepository(pool)
 	tagRepo := repository.NewTagRepository(pool)
 	userRepo := repository.NewUserRepository(pool)
-	authRepo, _ := repository.NewRedisAuthRepository(repository.RedisAuthParams{})
 
 	// TODO: init router - gorilla/mux
 
@@ -71,7 +70,7 @@ func main() {
 	ingrService := service.NewIngredientService(ingrRepo, ingrNomRepo)
 	ingrNomService := service.NewIngredientNomService(ingrNomRepo)
 	tagService := service.NewTagService(tagRepo)
-	userService := service.NewUserService(userRepo, authRepo)
+	userService := service.NewUserService(userRepo, redisRepo)
 
 	am := controller.NewAuthMiddleware(log, authService)
 	cc := controller.NewCocktailController(log, cocktailService)
@@ -80,7 +79,7 @@ func main() {
 	tc := controller.NewTagController(log, tagService)
 	ac := controller.NewAuthController(log, userService)
 
-	r := setupRouter(am.Logging)
+	r := mux.NewRouter()
 
 	// TODO: run server
 
@@ -88,6 +87,7 @@ func main() {
 	r.HandleFunc("/register", ac.RegisterUser).Methods("POST")
 
 	s := r.PathPrefix("/").Subrouter()
+	s = setupRouter(s, am.Logging)
 	s.HandleFunc("/cocktails", cc.CreateCocktail).Methods("POST")
 	s.HandleFunc("/cocktails", cc.GetCocktails).Methods("GET")
 	s.HandleFunc("/cocktails/search", cc.SearchCocktails).Methods("GET")
@@ -167,8 +167,7 @@ func setupLogger(env string) *slog.Logger {
 	return log
 }
 
-func setupRouter(mws ...mux.MiddlewareFunc) *mux.Router {
-	r := mux.NewRouter()
+func setupRouter(r *mux.Router, mws ...mux.MiddlewareFunc) *mux.Router {
 
 	r.Use(mws...)
 

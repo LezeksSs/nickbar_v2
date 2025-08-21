@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"nickbar_v2/internal/models/models"
 
@@ -46,8 +48,8 @@ func (r *TagRepository) IsTagExistAndApproved(ctx context.Context, name string) 
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return false, models.Tag{}, fmt.Errorf("NOROWS ERROR in %s: %w", ep, err)
+		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
+			return false, models.Tag{}, nil
 		}
 		return false, models.Tag{}, fmt.Errorf("SCAN ERROR in %s: %w", ep, err)
 	}

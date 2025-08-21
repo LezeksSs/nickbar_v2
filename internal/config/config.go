@@ -17,34 +17,21 @@ type AppConfig struct {
 }
 
 type DBConfig struct {
-	Host            string        `mapstructure:"host"`
-	Port            int           `mapstructure:"port"`
-	Name            string        `mapstructure:"name"`
-	User            string        `mapstructure:"user"`
-	Password        string        `mapstructure:"password"`
-	SSLMode         string        `mapstructure:"sslmode"`
-	MaxOpenConns    int           `mapstructure:"max_open_conns"`
-	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
-	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Name     string `mapstructure:"name"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	SSLMode  string `mapstructure:"sslmode"`
 }
 
 type RedisConfig struct {
-	Address      string                         `mapstructure:"address"`
-	Password     string                         `mapstructure:"password"`
-	DB           int                            `mapstructure:"db"`
-	WriteTimeout time.Duration                  `mapstructure:"write_timeout"`
-	ReadTimeout  time.Duration                  `mapstructure:"read_timeout"`
-	TokenExpire  time.Duration                  `mapstructure:"token_ttl"`
-	Tokenizer    func() (string, string, error) `mapstructure:"tokenizer"`
-}
-
-func (d DBConfig) DSN() string {
-	// return postgres://user:pswrd@host:port/dbname?sslmode=require
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		d.User, d.Password,
-		d.Host, d.Port, d.Name, d.SSLMode,
-	)
+	Address      string        `mapstructure:"address"`
+	Password     string        `mapstructure:"password"`
+	DB           int           `mapstructure:"db"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	TokenExpire  time.Duration `mapstructure:"token_ttl"`
 }
 
 type Config struct {
@@ -55,6 +42,7 @@ type Config struct {
 
 func Load() (*Config, error) {
 	v := viper.New()
+
 	v.SetConfigType("yaml")
 
 	v.AddConfigPath("./config")
@@ -79,7 +67,14 @@ func Load() (*Config, error) {
 
 	_ = v.BindEnv("db.user", "APP_DB_USER")
 	_ = v.BindEnv("db.password", "APP_DB_PASSWORD")
-	_ = v.BindEnv("redis.password", "APP_REDIS_PASSWORD")
+	_ = v.BindEnv("db.host", "APP_DB_HOST")
+	_ = v.BindEnv("db.port", "APP_DB_PORT")
+	_ = v.BindEnv("db.name", "APP_DB_NAME")
+	_ = v.BindEnv("db.sslmode", "APP_DB_SSLMODE")
+	_ = v.BindEnv("redis.addr", "APP_REDIS_ADDR")
+	_ = v.BindEnv("redis.db", "APP_REDIS_DB")
+	_ = v.BindEnv("app.env", "APP_ENV")
+
 	v.AutomaticEnv() // даёт приоритет переменным среды
 
 	var cfg Config
